@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 from flask import Flask, redirect, render_template, request, session, url_for, flash, abort
 from werkzeug.security import check_password_hash, generate_password_hash
 from contextlib import closing
-from flask_login import LoginManager, logout_user, login_required, login_user, UserMixin, current_user 
+from flask_login import LoginManager, UserMixin, logout_user, login_required, login_user, current_user 
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField 
 from wtforms.validators import DataRequired, Email
@@ -45,19 +45,21 @@ def load_user(person_id):
 
 # --- DEFINE USER CLASS ---
 class User(UserMixin):
-    def __init__(self, password, email, first_name, last_name, person_id):
+    def __init__(self, person_id, first_name, last_name, email, password_hash):
         self.id = person_id
         self.first_name = first_name
         self.last_name = last_name
-        self.password_hash = generate_password_hash(str(password))
         self.email = email
+        self.password_hash = password_hash
 
     def __str__(self):
         return f"User: {self.first_name} {self.last_name} (ID: {self.id}, Email: {self.email})"
     
     def save(self):
+        connection = sqlite3.connect("castlepass.db")
+        cursor = connection.cursor()
         cursor.execute(
-            'INSERT INTO users (first_name, last_name, password, email) VALUES (?, ?, ?, ?, ?)',
+            'INSERT INTO users (first_name, last_name, password_hash, email) VALUES (?, ?, ?, ?)',
             (self.first_name, self.last_name, self.password_hash, self.email)
         )
         connection.commit()
@@ -77,23 +79,11 @@ class User(UserMixin):
         connection.close()
         return user
     
-    @staticmethod
-    def get_id(email):
-        connection = sqlite3.connect("castlepass.db")
-        cursor = connection.cursor()
-        cursor.execute('SELECT * FROM users WHERE email = ?', (email,))
-        row = cursor.fetchone()
-        if row is None:
-            cursor.close()
-            connection.close()
-            return None
-        user_id = User(row[0])
-        cursor.close()
-        connection.close()
-        return user_id
+    def get_id(self):
+        return str(self.id) if self.id is not None else None 
 
-    def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
+    def check_password(self, entered_password):
+        return check_password_hash(self.password_hash, entered_password)
 
 # --- DEFINE LOGIN FORM ---
 class LoginForm(FlaskForm):
@@ -145,16 +135,18 @@ def register():
                 return render_template("error.html", message="Check your email is formatted correctly", code="400 Bad Request")
 
             # Create a new user
-            hashed_password = generate_password_hash(password)
-            cursor.execute(
-                "INSERT INTO users (first_name, last_name, password_hash, email) VALUES (?, ?, ?, ?)",
-                (first_name, last_name, hashed_password, email)
-            )
-            connection.commit()
+            hashed_password = generate_password_hash(password, method='pbkdf2:sha256', salt_length=8)
+            # cursor.execute(
+            #     "INSERT INTO users (first_name, last_name, password_hash, email) VALUES (?, ?, ?, ?)",
+            #     (first_name, last_name, hashed_password, email)
+            # )
+            # connection.commit()
+            user = User(None, first_name, last_name, email, hashed_password)
+            user.save()
 
-            user = User.get(email)
-            print(f"User details:", user.__str__())
-            print(f"User details:", {user})
+            # user = User.get(email)
+            # print(f"User details:", user.__str__())
+            # print(f"User details:", {user})
 
             return render_template("login.html", form=LoginForm())
 
@@ -170,7 +162,7 @@ def register():
 
 
 @app.route('/login', methods=['GET', 'POST'])
-def login():
+def login():  
     form = LoginForm()
 
     if request.method == "POST":
@@ -185,10 +177,20 @@ def login():
                 print(f"Form email: {form.email.data}")
                 print(f"User details: {user}")
                 if user:
-                    if check_password_hash(user.password_hash, form.password.data):
+                    print(f"Hashed password type: {type(user.password_hash)}")
+                    print(f"Hashed Password from Database: {user.password_hash}")
+                    print(f"Hashed password from input: {generate_password_hash(form.password.data)}")
+                    print(f"Length of Hashed Password: {len(user.password_hash)}")
+                    entered_password = form.password.data
+                    print(f"Entered Password: {entered_password}")
+                    
+                    if user.check_password(form.password.data):
                         flash('Password correct.')
                         login_user(user)
                         flash('Logged in as: ' + user.first_name + ' ' + user.last_name)
+                        print(f"Current user authenticated: {current_user.is_authenticated}")
+                        print(f"Current user ID: {current_user.id}")
+                        print(f"Current user first name: {current_user.first_name}")
                         return redirect(url_for('dashboard'))
                     else:
                         flash('Invalid password.')
@@ -201,11 +203,7 @@ def login():
             connection.close()
     
     print('Outside POST method')
-
-     # Check if the user is already authenticated
-    if current_user.is_authenticated:
-        return redirect(url_for('dashboard'))
-    
+ 
     return render_template('login.html', form=form)
 
 
@@ -217,7 +215,13 @@ def logout():
     flash('Logged out successfully.')
     return redirect(url_for('index'))
 
+
+
 @app.route('/dashboard')
-@login_required
 def dashboard():
-    return render_template('dashboard.html')
+    # Check if the user is authenticated
+    if current_user.is_authenticated:
+        return render_template('dashboard.html')
+
+    # If not authenticated, redirect to login
+    return redirect(url_for('login'))
