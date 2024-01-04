@@ -1,4 +1,4 @@
-from flask import session
+from flask import session, flash, redirect, url_for
 import string
 import secrets
 
@@ -11,6 +11,10 @@ def password_generator(length, uppercase, lowercase, numbers, symbols):
 
     if pass_length < min_length or pass_length > max_length:
         raise ValueError(f"Password length must be between {min_length} and {max_length} characters long.")
+    
+    if not uppercase and not lowercase and not numbers and not symbols:
+        flash(f'You must select at least one option.')
+        return redirect(url_for('passwords'))
     
     uppercase = bool(session.get("uppercase", True))
     lowercase = bool(session.get("lowercase", True))

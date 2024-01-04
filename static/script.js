@@ -21,3 +21,23 @@ document.addEventListener("DOMContentLoaded", function() {
         document.getElementById("slider").value = min_max;
     }
 });
+
+function updateCheckboxState(checkboxID) {
+    var checkbox = document.getElementById(checkboxID);
+    var checkboxValue = checkbox.checked;
+
+    sessionStorage.setItem(checkboxID, String(checkboxValue));
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    var checkboxes = document.querySelectorAll('input[type="checkbox"]');
+
+    checkboxes.forEach(function(checkbox) {
+        var checkboxID = checkbox.id;
+        var checkboxValue = sessionStorage.getItem(checkboxID);
+
+        if (checkboxValue) {
+            checkbox.checked = (checkboxValue === 'true');
+        }
+    });
+});
