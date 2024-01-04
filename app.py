@@ -1,17 +1,27 @@
 import sqlite3, os
 from dotenv import load_dotenv
-from flask import Flask, redirect, render_template, request, session, url_for, flash, abort
+from flask import Flask, redirect, render_template, request, url_for, flash, session
+from flask_session import Session
 from werkzeug.security import check_password_hash, generate_password_hash
 from contextlib import closing
 from flask_login import LoginManager, UserMixin, logout_user, login_required, login_user, current_user 
 from flask_wtf import FlaskForm
+from flask_wtf.csrf import CSRFProtect
 from wtforms import StringField, PasswordField, SubmitField 
 from wtforms.validators import DataRequired, Email
 
+from password_gen import password_generator
 
-# from flask_session import Session
-
+# Create the Flask app
 app = Flask(__name__)
+
+# Load environment variables from .env file
+load_dotenv()
+
+# CSRF protection
+csrf = CSRFProtect(app)
+csrf.init_app(app)
+app.config['WTF_CSRF_ENABLED'] = False
 
 # Open & configure the database
 connection = sqlite3.connect("castlepass.db")
@@ -32,16 +42,21 @@ if secret_key is None:
     # Secret key is not set
     raise ValueError("Secret key is not configured.")
 
+
 # Assign the secret key to the app configuration
 app.config["SECRET_KEY"] = secret_key
+app.config["SESSION_TYPE"] = "filesystem"
+Session(app)
+
 
 # Configure login manager
 login_manager = LoginManager()
 login_manager.init_app(app)
+# login_manager.login_view = 'login'
 
 @login_manager.user_loader
 def load_user(person_id):
-    return User.get(person_id)
+    return User.get(int(person_id))
 
 # --- DEFINE USER CLASS ---
 class User(UserMixin):
@@ -62,6 +77,7 @@ class User(UserMixin):
             'INSERT INTO users (first_name, last_name, password_hash, email) VALUES (?, ?, ?, ?)',
             (self.first_name, self.last_name, self.password_hash, self.email)
         )
+        self.id = cursor.lastrowid
         connection.commit()
 
     @staticmethod
@@ -82,6 +98,17 @@ class User(UserMixin):
     def get_id(self):
         return str(self.id) if self.id is not None else None 
 
+    @property
+    def is_authenticated(self):
+        return True if self.id is not None else False
+    
+    @property
+    def is_active(self):
+        return True if self.id is not None else False
+    
+    def is_anonymous(self):
+        return False
+    
     def check_password(self, entered_password):
         return check_password_hash(self.password_hash, entered_password)
 
@@ -164,46 +191,30 @@ def register():
 @app.route('/login', methods=['GET', 'POST'])
 def login():  
     form = LoginForm()
+    email = request.form.get("email")
+    password = request.form.get("password")
 
-    if request.method == "POST":
-        connection = sqlite3.connect("castlepass.db")
-        cursor = connection.cursor()
+    if request.method == "POST" and form.validate_on_submit():
+        print(f"Form data: {request.form}")
+        
+        user = User.get(email)
 
-        try:
-            print('Inside POST method')
-            if form.validate_on_submit():
-                print(f"Form validated: {form.validate_on_submit()}")
-                user = User.get(email=form.email.data)
-                print(f"Form email: {form.email.data}")
-                print(f"User details: {user}")
-                if user:
-                    print(f"Hashed password type: {type(user.password_hash)}")
-                    print(f"Hashed Password from Database: {user.password_hash}")
-                    print(f"Hashed password from input: {generate_password_hash(form.password.data)}")
-                    print(f"Length of Hashed Password: {len(user.password_hash)}")
-                    entered_password = form.password.data
-                    print(f"Entered Password: {entered_password}")
-                    
-                    if user.check_password(form.password.data):
-                        flash('Password correct.')
-                        login_user(user)
-                        flash('Logged in as: ' + user.first_name + ' ' + user.last_name)
-                        print(f"Current user authenticated: {current_user.is_authenticated}")
-                        print(f"Current user ID: {current_user.id}")
-                        print(f"Current user first name: {current_user.first_name}")
-                        return redirect(url_for('dashboard'))
-                    else:
-                        flash('Invalid password.')
-                else:
-                    flash('Invalid email: {form.email.data}')
-            else:
-                print(form.errors)
-        finally:
-            cursor.close()
-            connection.close()
+        if user and user.check_password(password):
+            login_user(user)
+            flash(f'Logged in as: {user.first_name} {user.last_name}')
+            print(f"Current user authenticated: {current_user.is_authenticated}")
+            print(f"Current user ID: {current_user.id}")
+            print(f"Current user first name: {current_user.first_name}")
+
+            next_page = request.args.get('next')
+            print(f"Next Page: {next_page}")
+            if not next_page or next_page == 'None' or not next_page.startswith('/'):
+                next_page = '/passwords'
+            print(f"Redirecting to: {next_page}")
+            return redirect(next_page)
+
+        flash('Invalid email or password.')
     
-    print('Outside POST method')
- 
     return render_template('login.html', form=form)
 
 
@@ -217,11 +228,35 @@ def logout():
 
 
 
-@app.route('/dashboard')
-def dashboard():
-    # Check if the user is authenticated
-    if current_user.is_authenticated:
-        return render_template('dashboard.html')
+@app.route('/passwords', methods=["GET", "POST"])
+# @login_required
+def passwords():
+    if request.method == "POST":
+        # Get the password length from the form
+        pass_length = int(request.form.get("min_max"))
 
-    # If not authenticated, redirect to login
-    return redirect(url_for('login'))
+        # Get the password options from the form
+        uppercase = request.form.get("uppercase")
+        lowercase = request.form.get("lowercase")
+        numbers = request.form.get("numbers")
+        symbols = request.form.get("symbols")
+
+        # Store data in session
+        session['pass_length'] = pass_length
+        session['uppercase'] = uppercase
+        session['lowercase'] = lowercase
+        session['numbers'] = numbers
+        session['symbols'] = symbols
+
+        # Generate the password
+        password = password_generator(pass_length, uppercase, lowercase, numbers, symbols)
+
+        return render_template("passwords.html", password=password, form=LoginForm())
+    
+    return render_template('passwords.html', form=LoginForm())
+
+
+
+
+if __name__ == "__main__":
+    app.run(debug=True)

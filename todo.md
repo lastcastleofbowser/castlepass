@@ -5,18 +5,21 @@ Password manager
 - Quick password-to-clipboard copy
 
 Password generator
-- Customise generated passwords by 
-    + length (>8 <20)
+- Customise generated passwords by ✅
+    + length (>8 <25)
     -- Toggleable --
-    + capital letters
-    + numbers
-    + special characters
-- Quick password-to-clipboard copy
+    + capital letters 
+    + numbers 
+    + special characters 
+- Quick password-to-clipboard copy 🟠
 
-Log in/Register
-- User registration 
+Log in/Register 
+- User registration ☑️
     + password strength checker
-- Log in
+- Log in ☑️
+    + show different navbar for logged in users 🟠
+- Logout 🟠
+
 
 Database
 CREATE TABLE users (
