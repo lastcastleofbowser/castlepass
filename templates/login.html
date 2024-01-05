@@ -5,18 +5,12 @@
 {% endblock %}
 
 {% block main %}
-    <form method="post" action="{{ url_for('login') }}">
-        {{ form.csrf_token }}
-        
-        <input type="hidden" name="next" value="{{ request.args.get('next') }}">
-        
+    <form action="/login" method="post">
         <div class="mb-3">
-            {{ form.email.label }}
-            {{ form.email }}
+            <input autocomplete="off" autofocus class="form-control mx-auto w-auto" id="email" name="email" placeholder="Email" type="text">
         </div>
         <div class="mb-3">
-            {{ form.password.label }}
-            {{ form.password }}
+            <input class="form-control mx-auto w-auto" id="password" name="password" placeholder="Password" type="password">
         </div>
         <button class="btn btn-primary" type="submit">Log In</button>
     </form>

@@ -11,14 +11,14 @@ Password generator
     + capital letters 
     + numbers 
     + special characters 
-- Quick password-to-clipboard copy 🟠
+- Quick password-to-clipboard copy ☑️
 
-Log in/Register 
+Log in/Register ✅
 - User registration ☑️
     + password strength checker
 - Log in ☑️
-    + show different navbar for logged in users 🟠
-- Logout 🟠
+    + show different navbar for logged in users ☑️
+- Logout ☑️
 
 
 Database
@@ -38,9 +38,10 @@ site_username TEXT,
 site_password_hash TEXT NOT NULL,
 FOREIGN KEY (user_id) REFERENCES users(person_id)
 
-CREATE TABLE generator
+CREATE TABLE generator (
 id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
 user_id INTEGER NOT NULL,
-time_generated CURRENT_TIMESTAMP,
-gen_password_hash TEXT NOT NULL,
+time_generated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+gen_password TEXT NOT NULL,
 FOREIGN KEY (user_id) REFERENCES users(person_id)
+);

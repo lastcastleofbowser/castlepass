@@ -1,14 +1,15 @@
-function copyPassword() {
-    /* Get the text field */
-    var copyText = document.getElementById("generated-password");
+function copyToClipboard() {
+    var copyText = document.getElementById("generated-password").textContent.trim();
 
-    /* Select the text field */
-    copyText.select();
-    copyText.setSelectionRange(0, 99999); /* For mobile devices */
-
-    /* Copy the text inside the text field */
-    document.execCommand("copy");
+    navigator.clipboard.writeText(copyText)
+        .then(function() {
+            alert("Copied the password: " + copyText);
+        })
+        .catch(function(error) {
+            console.error("Failed to copy text: ", error);
+        });
 }
+
 function updateSliderValue(value) {
     document.getElementById("min_max_display").textContent = value;
     sessionStorage.setItem("min_max", value);
