@@ -14,7 +14,7 @@ def password_generator(length, uppercase, lowercase, numbers, symbols):
     
     if not uppercase and not lowercase and not numbers and not symbols:
         flash(f'You must select at least one option.')
-        return redirect(url_for('passwords'))
+        return redirect(url_for('pass_generator'))
     
     uppercase = bool(session.get("uppercase", True))
     lowercase = bool(session.get("lowercase", True))

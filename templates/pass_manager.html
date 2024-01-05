@@ -1,0 +1,38 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    PASSWORD MANAGER
+{% endblock %}
+
+{% block main %}
+    <h1>Password Manager</h1>
+
+    <div class="d-flex align-items-center my-3 justify-content-center mx-auto border p-2">
+        {% if password %}
+            <div id="password-history">
+                <table>
+                    <thead>
+                        <td> Website </td>
+                        <td> Username </td>
+                        <td> Password </td>
+                        <td> Date Created </td>
+                    </thead>
+                    <tbody>
+                        {% for entry in entries %}
+                        <tr>
+                            <td> {{ entry[0] }} </td>
+                            <td> {{ entry[1] }} </td>
+                            <td> {{ entry[2] }} </td>
+                            <td> {{ entry[3] }} </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+
+            </div>
+        {% endif %}
+    </div>
+            
+{% endblock %}
+            

@@ -5,16 +5,16 @@
 {% endblock %}
 
 {% block main %}
-    <h1>This is your password manager</h1>
     <h1>Password Generator</h1>
 
-    <div class="mb-3 border p-4">
+    <div class="d-flex align-items-center my-3 justify-content-center mx-auto border p-2">
         {% if password %}
-            <div class="generated-password">{{ password }}</div>
+            <div id="generated-password">{{ password }}</div>
+            <button class="btn btn-outline-danger btn-sm mx-3" onclick="copyToClipboard()">Copy</button>
         {% endif %}
     </div>
     
-    <form action="/passwords" method="POST">
+    <form action="/pass_generator" method="POST">
         <!-- {{ form.csrf_token }} -->
         <div class="container">
 
@@ -49,6 +49,29 @@
 
         </div>
     </form>
+
+    <div class="d-flex align-items-center my-3 justify-content-center mx-auto border p-2">
+        {% if password_history %}
+            <div id="password-history">
+                <table>
+                    <thead>
+                        <td> Password </td>
+                        <td> Date Created </td>
+                    </thead>
+                    <tbody>
+                        {% for entry in entries %}
+                        <tr>
+                            <td> {{ entry[0] }} </td>
+                            <td> {{ entry[1] }} </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+
+            </div>
+        {% endif %}
+    </div>
             
 {% endblock %}
             

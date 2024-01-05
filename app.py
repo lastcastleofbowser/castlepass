@@ -46,6 +46,7 @@ if secret_key is None:
 # Assign the secret key to the app configuration
 app.config["SECRET_KEY"] = secret_key
 app.config["SESSION_TYPE"] = "filesystem"
+app.config["SESSION_PERMANENT"] = False
 Session(app)
 
 
@@ -112,6 +113,10 @@ class User(UserMixin):
     def check_password(self, entered_password):
         return check_password_hash(self.password_hash, entered_password)
 
+
+def unhash_password(password_hash):
+    return password_hash[21:] if password_hash.startswith("pbkdf2:sha256:600000$") else password_hash
+
 # --- DEFINE LOGIN FORM ---
 class LoginForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
@@ -141,7 +146,9 @@ def register():
 
             # Check all parameters are filled
             if not first_name or not last_name or not password or not email:
-                return render_template("error.html", message="Please fill out all fields", code="400 Bad Request")
+                flash(f"Please fill out all fields")
+                return redirect("/register")
+                # return render_template("error.html", message="Please fill out all fields", code="400 Bad Request")
 
             # Check if the email already exists
             connection = sqlite3.connect('castlepass.db')  
@@ -151,15 +158,21 @@ def register():
             cursor.execute("SELECT * FROM users WHERE email = ?", (email,))
             existing_user = cursor.fetchone()
             if existing_user:
-                return render_template("error.html", message="Email already exists", code="409 Conflict")
+                flash(f"Email already exists")
+                return redirect("/register")
+                # return render_template("error.html", message="Email already exists", code="409 Conflict")
 
             # Check password is at least 6 characters long
             if len(password) < 6:
-                return render_template("error.html", message="Password should be at least 6 characters long")
+                flash(f"Password should be at least 6 characters long")
+                return
+                # return render_template("error.html", message="Password should be at least 6 characters long")
            
             # Check email is correct format 
             if email.find("@") == -1 or email.find(".") == -1:
-                return render_template("error.html", message="Check your email is formatted correctly", code="400 Bad Request")
+                flash(f"Check your email is formatted correctly")
+                return redirect("/register")
+                # return render_template("error.html", message="Check your email is formatted correctly", code="400 Bad Request")
 
             # Create a new user
             hashed_password = generate_password_hash(password, method='pbkdf2:sha256', salt_length=8)
@@ -188,8 +201,8 @@ def register():
 
 
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():  
+# @app.route('/login', methods=['GET', 'POST'])
+# def login():  
     form = LoginForm()
     email = request.form.get("email")
     password = request.form.get("password")
@@ -217,20 +230,72 @@ def login():
     
     return render_template('login.html', form=form)
 
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    """Log user in"""
+
+    # Forget any user_id
+    session.clear()
+
+    if request.method == "POST":
+        # Ensure username was submitted
+        if not request.form.get("email"):
+            flash(f"Must provide email")
+            return redirect("/login")
+
+        # Ensure password was submitted
+        elif not request.form.get("password"):
+            flash(f"Must provide password")
+            return redirect("/login")
+        
+        # Open the database connection
+        connection = sqlite3.connect('castlepass.db')
+        cursor = connection.cursor()
+
+        # Query database for username
+        cursor.execute(
+            "SELECT * FROM users WHERE email = ?", (request.form.get("email"),)
+        )
+
+        # Fetch all the rows
+        rows = cursor.fetchall()
+
+        # Ensure username exists and password is correct
+        if len(rows) != 1 or not check_password_hash(
+            rows[0][4], request.form.get("password")
+        ):
+            flash(f"Invalid email and/or password")
+            return redirect("/login")
+
+        # Remember which user has logged in
+        session["user_id"] = rows[0][1]
+
+        # Close the database connection
+        cursor.close()
+        connection.close()
+
+        # Redirect user to password generator page
+        flash(f"Logged in as: {rows[0][1]} {rows[0][2]}")
+        return redirect("/pass_generator")
+
+    # User reached route via GET (as by clicking a link or via redirect)
+    else:
+        return render_template("login.html")
+    
 
 
 @app.route('/logout')
-@login_required
-def logout():
-    logout_user()
-    flash('Logged out successfully.')
-    return redirect(url_for('index'))
-
-
-
-@app.route('/passwords', methods=["GET", "POST"])
 # @login_required
-def passwords():
+def logout():
+    session.clear()
+    flash('Logged out successfully.')
+    return render_template('index.html')
+
+
+
+@app.route('/pass_generator', methods=["GET", "POST"])
+# @login_required
+def pass_generator():
     if request.method == "POST":
         # Get the password length from the form
         pass_length = int(request.form.get("min_max"))
@@ -251,10 +316,48 @@ def passwords():
         # Generate the password
         password = password_generator(pass_length, uppercase, lowercase, numbers, symbols)
 
-        return render_template("passwords.html", password=password, form=LoginForm())
-    
-    return render_template('passwords.html', form=LoginForm())
+        password_history = False
 
+        if password:
+            password_history = True
+
+        # Open the database connection
+        connection = sqlite3.connect('castlepass.db')
+        cursor = connection.cursor()
+
+        user_id = session["user_id"]
+        
+        # Store the password in the database
+        cursor.execute(
+            "INSERT INTO generator (gen_password, user_id) VALUES (?, ?)",
+            (password, user_id)
+        )
+
+        # Retrieve the password in the database
+        cursor.execute(
+        "SELECT gen_password, time_generated FROM generator WHERE user_id = ? ORDER BY time_generated DESC",
+        (user_id,)
+        )
+        entries = cursor.fetchall()
+
+        # Commit the changes    
+        connection.commit()
+
+        if cursor:
+                cursor.close()
+        if connection:
+            connection.close()
+
+        return render_template("pass_generator.html", password=password, password_history=password_history, entries=entries, form=LoginForm())
+    
+    return render_template('pass_generator.html', form=LoginForm())
+
+
+@app.route('/pass_manager', methods=["GET", "POST"])
+# @login_required
+def pass_manager():
+     """Password Manager"""
+     return render_template('pass_manager.html')
 
 
 
