@@ -1,11 +1,10 @@
 Password manager
-- Add, edit and delete passwords
+- Add ☑️, edit and delete passwords
 - Search all your passwords
 - Toggle password visibility
-- Quick password-to-clipboard copy
 
-Password generator
-- Customise generated passwords by ✅
+Password generator ✅
+- Customise generated passwords by ☑️
     + length (>8 <25)
     -- Toggleable --
     + capital letters 
@@ -30,13 +29,14 @@ CREATE TABLE users (
     password_hash TEXT NOT NULL);
 CREATE UNIQUE INDEX email ON users(email);
 
-CREATE TABLE passwords
+CREATE TABLE passwords (
 id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
 user_id INTEGER NOT NULL,
 site_address TEXT,
 site_username TEXT,
-site_password_hash TEXT NOT NULL,
+site_password TEXT NOT NULL,
 FOREIGN KEY (user_id) REFERENCES users(person_id)
+);
 
 CREATE TABLE generator (
 id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,

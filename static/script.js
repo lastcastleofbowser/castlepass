@@ -1,3 +1,5 @@
+// PASSWORD GENERATOR BELOW
+
 function copyToClipboard() {
     var copyText = document.getElementById("generated-password").textContent.trim();
 
@@ -40,5 +42,33 @@ document.addEventListener("DOMContentLoaded", function() {
         if (checkboxValue) {
             checkbox.checked = (checkboxValue === 'true');
         }
+    });
+});
+
+// PASSWORD MANAGER BELOW
+
+function toggleVisibility(index) {
+    var passwordElement = document.querySelectorAll(".user-password")[index];
+    var button = document.querySelectorAll(".toggle-visibility")[index];
+
+    var visiblePassword = passwordElement.querySelector('.visible-password');
+    var hiddenPassword = passwordElement.querySelector('.hidden-password');
+
+    if (visiblePassword.classList.contains("hidden")) {
+        visiblePassword.classList.remove("hidden");
+        hiddenPassword.classList.add("hidden");
+        button.textContent = "Hide";
+    } else {
+        visiblePassword.classList.add("hidden");
+        hiddenPassword.classList.remove("hidden");
+        button.textContent = "Show";
+    }
+}
+
+// Initialize button text on load
+document.addEventListener("DOMContentLoaded", function() {
+    var buttons = document.querySelectorAll(".toggle-visibility");
+    buttons.forEach(function(button, index) {
+        toggleVisibility(index);
     });
 });
