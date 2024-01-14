@@ -1,7 +1,7 @@
 Password manager
 - Add ☑️, edit and delete passwords
 - Search all your passwords
-- Toggle password visibility
+- Toggle password visibility ☑️
 
 Password generator ✅
 - Customise generated passwords by ☑️
