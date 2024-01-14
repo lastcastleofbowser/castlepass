@@ -114,14 +114,18 @@ class User(UserMixin):
         return check_password_hash(self.password_hash, entered_password)
 
 
-def unhash_password(password_hash):
-    return password_hash[21:] if password_hash.startswith("pbkdf2:sha256:600000$") else password_hash
-
 # --- DEFINE LOGIN FORM ---
 class LoginForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
     password = PasswordField('Password', validators=[DataRequired()]) 
     submit = SubmitField('Login')
+
+# --- DEFINE PASSWORD MANAGER FORM ---
+class PasswordManagerForm(FlaskForm):
+    website = StringField('Website', validators=[DataRequired()])
+    username = StringField('Username', validators=[DataRequired()])
+    password = PasswordField('Password', validators=[DataRequired()]) 
+    submit = SubmitField('Save')
 
    
 # --- ROUTES BELOW ---
@@ -148,45 +152,31 @@ def register():
             if not first_name or not last_name or not password or not email:
                 flash(f"Please fill out all fields")
                 return redirect("/register")
-                # return render_template("error.html", message="Please fill out all fields", code="400 Bad Request")
 
             # Check if the email already exists
             connection = sqlite3.connect('castlepass.db')  
             
-            # Replace with your actual database name
             cursor = connection.cursor()
             cursor.execute("SELECT * FROM users WHERE email = ?", (email,))
             existing_user = cursor.fetchone()
             if existing_user:
                 flash(f"Email already exists")
                 return redirect("/register")
-                # return render_template("error.html", message="Email already exists", code="409 Conflict")
 
             # Check password is at least 6 characters long
             if len(password) < 6:
                 flash(f"Password should be at least 6 characters long")
-                return
-                # return render_template("error.html", message="Password should be at least 6 characters long")
+                return redirect("/register")
            
             # Check email is correct format 
             if email.find("@") == -1 or email.find(".") == -1:
                 flash(f"Check your email is formatted correctly")
                 return redirect("/register")
-                # return render_template("error.html", message="Check your email is formatted correctly", code="400 Bad Request")
 
             # Create a new user
             hashed_password = generate_password_hash(password, method='pbkdf2:sha256', salt_length=8)
-            # cursor.execute(
-            #     "INSERT INTO users (first_name, last_name, password_hash, email) VALUES (?, ?, ?, ?)",
-            #     (first_name, last_name, hashed_password, email)
-            # )
-            # connection.commit()
             user = User(None, first_name, last_name, email, hashed_password)
             user.save()
-
-            # user = User.get(email)
-            # print(f"User details:", user.__str__())
-            # print(f"User details:", {user})
 
             return render_template("login.html", form=LoginForm())
 
@@ -292,7 +282,6 @@ def logout():
     return render_template('index.html')
 
 
-
 @app.route('/pass_generator', methods=["GET", "POST"])
 # @login_required
 def pass_generator():
@@ -356,8 +345,72 @@ def pass_generator():
 @app.route('/pass_manager', methods=["GET", "POST"])
 # @login_required
 def pass_manager():
-     """Password Manager"""
-     return render_template('pass_manager.html')
+    """Password Manager"""
+    form = PasswordManagerForm()
+    user_id = session["user_id"]
+    
+    connection = sqlite3.connect('castlepass.db')
+    cursor = connection.cursor()
+
+    if not user_id:
+        flash(f"Please login to access password manager")
+        return redirect("/login")
+    
+    elif user_id:
+        # Retrieve users passwords in the database
+        cursor.execute(
+        "SELECT site_address, site_username, site_password FROM passwords WHERE user_id = ?",
+        (user_id,)
+        )
+        entries = cursor.fetchall()
+    
+    if request.method == "GET":
+        return render_template('pass_manager.html', entries=entries, form=form)
+
+    # Get password details from the form
+    website = request.form.get("website")
+    username = request.form.get("username")
+    password = str(request.form.get("password"))
+    
+    if request.method == "POST":
+        try:
+            connection = sqlite3.connect('castlepass.db')
+            cursor = connection.cursor()
+
+            # Check all parameters are filled
+            if not website or not username or not password:
+                flash(f"Please fill out all fields")
+                return redirect("/pass_manager")
+            
+            # Insert new row into database
+            cursor.execute("INSERT INTO passwords (user_id, site_address, site_username, site_password) VALUES (?, ?, ?, ?)", 
+            (user_id, website, username, password))
+
+            # Commit the changes
+            connection.commit()
+
+            # Retrieve updated passwords from the database
+            cursor.execute(
+            "SELECT site_address, site_username, site_password FROM passwords WHERE user_id = ?",
+            (user_id,)
+            )
+            entries = cursor.fetchall()
+
+            # Edit password
+            if request.form.get("edit"):
+                cursor.execute("UPDATE passwords SET site_address = ?, site_username = ?, site_password = ? WHERE user_id = ? AND site_address = ?",
+                (website, username, password, user_id, website))
+                connection.commit()
+                flash(f"Password updated successfully")
+                return redirect("/pass_manager")
+
+            return render_template('pass_manager.html', entries=entries, form=form)
+        
+        finally:    
+            if cursor:
+                cursor.close()
+            if connection:
+                connection.close()
 
 
 

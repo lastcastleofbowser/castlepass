@@ -7,30 +7,54 @@
 {% block main %}
     <h1>Password Manager</h1>
 
-    <div class="d-flex align-items-center my-3 justify-content-center mx-auto border p-2">
-        {% if password %}
-            <div id="password-history">
-                <table>
-                    <thead>
-                        <td> Website </td>
-                        <td> Username </td>
-                        <td> Password </td>
-                        <td> Date Created </td>
-                    </thead>
-                    <tbody>
-                        {% for entry in entries %}
-                        <tr>
-                            <td> {{ entry[0] }} </td>
-                            <td> {{ entry[1] }} </td>
-                            <td> {{ entry[2] }} </td>
-                            <td> {{ entry[3] }} </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-
-
+    <form action="/pass_manager" method="post">
+            <div class="mb-3">
+                <input autocomplete="off" autofocus class="form-control mx-auto w-auto" id="website" name="website" placeholder="Website" required type="text">
             </div>
+            <div class="mb-3">
+                <input autocomplete="off" autofocus class="form-control mx-auto w-auto" id="username" name="username" placeholder="Username" required type="text">
+            </div>
+            <div class="mb-3">
+                <input autocomplete="new-password" autofocus class="form-control mx-auto w-auto" id="password" name="password" placeholder="Password" required type="password">
+            </div>
+            <button class="btn btn-primary" type="submit">Submit</button>
+        </form>
+
+    <div class="d-flex align-items-center my-3 justify-content-center mx-auto border p-2">
+        {% if session["user_id"] %}
+            {% if entries %}
+                <div id="password-history" class="table-responsive">
+                    <table class="table mx-auto">
+                        <thead class="thead-dark">
+                            <td scope="column"> Website </td>
+                            <td scope="column"> Username </td>
+                            <td scope="column"> Password </td>
+                            <td scope="column">Show/Hide</td> 
+                            <td scope="column">Edit</td> 
+                            <td scope="column">Delete</td> 
+                        </thead>
+                        <tbody>
+                            {% for entry in entries %}
+                            <tr>
+                                <td> {{ entry[0] }} </td>
+                                <td> {{ entry[1] }} </td>
+                                <td class="user-password"> 
+                                    <span class="visible-password">{{ entry[2] }}</span> 
+                                    <span class="hidden-password hidden">******</span>
+                                </td>
+                                <td><button type="button" class="toggle-visibility btn btn-outline-primary" name="toggle-visibility" onclick="toggleVisibility('{{ loop.index0 }}')">Show</button></td>
+                                <td><button type="button" class="edit btn btn-outline-primary" name="edit">Edit</button></td>
+                                <td><button type="button" class="delete btn btn-outline-danger" name="delete">Delete</button></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p> No entries found </p>
+            {% endif %}
+        {% else %}
+        <p> Please log in to access the password manager </p>    
         {% endif %}
     </div>
             
