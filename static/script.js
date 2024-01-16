@@ -53,7 +53,7 @@ function toggleVisibility(index) {
 
     var visiblePassword = passwordElement.querySelector('.visible-password');
     var hiddenPassword = passwordElement.querySelector('.hidden-password');
-
+ 
     if (visiblePassword.classList.contains("hidden")) {
         visiblePassword.classList.remove("hidden");
         hiddenPassword.classList.add("hidden");
@@ -65,10 +65,27 @@ function toggleVisibility(index) {
     }
 }
 
-// Initialize button text on load
+// Initialize Show/Hide button text on load
 document.addEventListener("DOMContentLoaded", function() {
     var buttons = document.querySelectorAll(".toggle-visibility");
     buttons.forEach(function(button, index) {
         toggleVisibility(index);
     });
 });
+
+// Delete button functionality
+function setDeleteValues(website) {
+    
+    // Select the span with data-password-id attribute
+    const passwordIdSpan = document.querySelector(`button[data-website="${website}"] + span[data-password-id]`);
+    
+    if (passwordIdSpan) {
+        const passwordId = passwordIdSpan.getAttribute("data-password-id");
+        
+        document.querySelector("#delete-website").value = website;
+        document.querySelector("#delete-password-id").value = passwordId;
+
+        // Submit the delete form
+        document.getElementById("delete-password-form").submit();
+    }
+}

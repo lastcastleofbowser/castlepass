@@ -11,6 +11,7 @@ from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired, Email
 
 from password_gen import password_generator
+from login_required import login_required
 
 # Create the Flask app
 app = Flask(__name__)
@@ -343,7 +344,7 @@ def pass_generator():
 
 
 @app.route('/pass_manager', methods=["GET", "POST"])
-# @login_required
+@login_required
 def pass_manager():
     """Password Manager"""
     form = PasswordManagerForm()
@@ -359,7 +360,7 @@ def pass_manager():
     elif user_id:
         # Retrieve users passwords in the database
         cursor.execute(
-        "SELECT site_address, site_username, site_password FROM passwords WHERE user_id = ?",
+        "SELECT site_address, site_username, site_password, id FROM passwords WHERE user_id = ?",
         (user_id,)
         )
         entries = cursor.fetchall()
@@ -391,18 +392,18 @@ def pass_manager():
 
             # Retrieve updated passwords from the database
             cursor.execute(
-            "SELECT site_address, site_username, site_password FROM passwords WHERE user_id = ?",
+            "SELECT site_address, site_username, site_password, id FROM passwords WHERE user_id = ?",
             (user_id,)
             )
             entries = cursor.fetchall()
 
             # Edit password
-            if request.form.get("edit"):
-                cursor.execute("UPDATE passwords SET site_address = ?, site_username = ?, site_password = ? WHERE user_id = ? AND site_address = ?",
-                (website, username, password, user_id, website))
-                connection.commit()
-                flash(f"Password updated successfully")
-                return redirect("/pass_manager")
+            # if request.form.get("edit"):
+            #     cursor.execute("UPDATE passwords SET site_address = ?, site_username = ?, site_password = ? WHERE user_id = ? AND site_address = ?",
+            #     (website, username, password, user_id, website))
+            #     connection.commit()
+            #     flash(f"Password updated successfully")
+            #     return redirect("/pass_manager")
 
             return render_template('pass_manager.html', entries=entries, form=form)
         
@@ -413,6 +414,41 @@ def pass_manager():
                 connection.close()
 
 
+@app.route('/delete_password', methods=['POST'])
+@login_required  
+def delete_password():
+    """Password Deletion"""
+    user_id = session.get("user_id")
 
+    if not user_id:
+        flash("Please login to access password manager")
+        return redirect("/login")
+
+    delete_website = request.form.get("delete_website")
+    delete_password_id = request.form.get("delete_password_id")
+
+    if delete_website and delete_password_id:
+
+        connection = sqlite3.connect('castlepass.db')
+        cursor = connection.cursor()
+
+        try:
+            cursor.execute("DELETE FROM passwords WHERE user_id = ? AND site_address = ? AND id = ?",
+                        (user_id, delete_website, delete_password_id))
+            connection.commit()
+            flash("Password deleted successfully")
+        except sqlite3.Error as e:
+            print("Error deleting password:", e)
+            flash("Error deleting password")
+
+        finally:
+            cursor.close()
+            connection.close()
+
+    return redirect("/pass_manager")
+
+
+
+#  ----- DELETE ME BEFORE DEPLOYMENT -----
 if __name__ == "__main__":
     app.run(debug=True)
