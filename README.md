@@ -1,5 +1,9 @@
-# CastlePass ⛫
-A password generator and manager. My final project submission for Harvard's CS50x Course
+# CastlePass ⛫ 
+
+<i>A Fortress for your Passwords</i>
+
+
+Password generator and manager. My final project submission for Harvard's CS50x Course
 
 # Description
 With today's society spending more time online, it is important to protect ourselves from risks in the digital space. One of the most effective ways to do this is to use strong, unique passwords for your separate accounts. Reusing passwords across multiple accounts is bad practice and can lead to your data and sensitive information being compromised. Likewise, weak, guessable passwords can easily allow people access into your account, which puts you at significant risk.
