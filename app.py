@@ -397,14 +397,6 @@ def pass_manager():
             )
             entries = cursor.fetchall()
 
-            # Edit password
-            # if request.form.get("edit"):
-            #     cursor.execute("UPDATE passwords SET site_address = ?, site_username = ?, site_password = ? WHERE user_id = ? AND site_address = ?",
-            #     (website, username, password, user_id, website))
-            #     connection.commit()
-            #     flash(f"Password updated successfully")
-            #     return redirect("/pass_manager")
-
             return render_template('pass_manager.html', entries=entries, form=form)
         
         finally:    
@@ -414,7 +406,7 @@ def pass_manager():
                 connection.close()
 
 
-@app.route('/delete_password', methods=['POST'])
+@app.route('/delete_password', methods=["POST"])
 @login_required  
 def delete_password():
     """Password Deletion"""
@@ -436,7 +428,8 @@ def delete_password():
             cursor.execute("DELETE FROM passwords WHERE user_id = ? AND site_address = ? AND id = ?",
                         (user_id, delete_website, delete_password_id))
             connection.commit()
-            flash("Password deleted successfully")
+            flash(f"Password {delete_website} deleted successfully")
+
         except sqlite3.Error as e:
             print("Error deleting password:", e)
             flash("Error deleting password")
@@ -447,6 +440,49 @@ def delete_password():
 
     return redirect("/pass_manager")
 
+
+@app.route('/edit_form', methods=["POST"])
+@login_required
+def edit_password():
+    """Edit Password"""
+    user_id = session.get("user_id")
+
+    edit_website = request.form.get("editWebsite")
+    edit_username = request.form.get("editUsername")
+    edit_password = request.form.get("editPassword")
+    password_id = request.form.get("passwordId")
+
+    print(f"Website: {edit_website}")
+    print(f"Username: {edit_username}")
+    print(f"Password: {edit_password}")
+    print(f"Password ID: {password_id}")
+
+    if not user_id:
+        flash("Please login to access password manager")
+        return redirect("/login")
+   
+    if request.method == "POST":
+        
+        connection = sqlite3.connect('castlepass.db')
+        cursor = connection.cursor()
+
+        try:
+
+            cursor.execute("UPDATE passwords SET site_address = ?, site_username = ?, site_password = ? WHERE id = ?",
+            (edit_website, edit_username, edit_password, password_id))
+            connection.commit()
+            flash(f"{edit_website} updated successfully")
+            return redirect("/pass_manager")
+    
+        except sqlite3.Error as e:
+            print(f"Error editing {edit_website} information:", e)
+            flash(f"Error editing {edit_website} information")
+
+        finally:
+            cursor.close()
+            connection.close()
+    
+    return redirect("/pass_manager")
 
 
 #  ----- DELETE ME BEFORE DEPLOYMENT -----

@@ -7,6 +7,7 @@
 {% block main %}
     <h1>Password Manager</h1>
 
+    <!-- New Password input form -->
     <form action="/pass_manager" method="post">
             <div class="mb-3">
                 <input autocomplete="off" autofocus class="form-control mx-auto w-auto" id="website" name="website" placeholder="Website" required type="text">
@@ -19,7 +20,33 @@
             </div>
             <button class="btn btn-primary" type="submit">Submit</button>
         </form>
+    
+        <!-- Edit Form on edit button click -->
+        <div id="editModal" class="modal align-items-center justify-content-center">
+            <div class="modal-content">
+                <span class="close" onclick="closeEditModal()">
+                    <button class="mb-3 btn btn-danger" onclick="closeEditModal()">&times;</button>
+                </span>
+                <form id="editForm" action="/edit_form" method="post" name="editForm">
+                    <div class="mb-3">
+                        <label for="editWebsite">Website:</label>
+                        <input class="form-control mx-auto w-auto" type="text" id="editWebsite" name="editWebsite" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editUsername">Username:</label>
+                        <input class="form-control mx-auto w-auto" type="text" id="editUsername" name="editUsername" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editPassword">Password:</label>
+                        <input class="form-control mx-auto w-auto" type="password" id="editPassword" name="editPassword" required>
+                    </div>
+                    <button class="edit btn btn-outline-primary mb-3" name="edit" type="submit">Save Changes</button>
+                    <input type="hidden" id="passwordId" name="passwordId">
+                </form>
+            </div>
+        </div>
 
+        <!-- User's password table -->
     <div class="d-flex align-items-center my-3 justify-content-center mx-auto border p-2">
         {% if session["user_id"] %}
             {% if entries %}
@@ -43,7 +70,7 @@
                                     <span class="hidden-password hidden">******</span>
                                 </td>
                                 <td><button type="button" class="toggle-visibility btn btn-outline-primary" name="toggle-visibility" onclick="toggleVisibility('{{ loop.index0 }}')">Show</button></td>
-                                <td><button type="button" class="edit btn btn-outline-primary" name="edit">Edit</button></td>
+                                <td><button type="button" class="edit btn btn-outline-primary" name="edit" onclick="openEditModal('{{ entry[0]}}', '{{ entry[1]}}', '{{ entry[2]}}', '{{ entry[3]}}')">Edit</button></td>
                                 <td>
                                     <button type="button" class="delete btn btn-outline-danger" name="delete" data-website="{{ entry[0] }}" onclick="setDeleteValues('{{ entry[0] }}')">Delete</button>
                                     <span class="hidden" data-password-id="{{ entry[3] }}"></span> <!-- Hidden Password ID for deletion purposes -->
@@ -60,7 +87,7 @@
         <p> Please log in to access the password manager </p>    
         {% endif %}
     </div>
-    
+
     <!-- Hidden input for delete_website and password_id -->
     <form id="delete-password-form" action="/delete_password" method="post">
         <input type="hidden" id="delete-website" name="delete_website" value="">

@@ -1,4 +1,4 @@
-// PASSWORD GENERATOR BELOW
+// ----- PASSWORD GENERATOR BELOW -----
 
 function copyToClipboard() {
     var copyText = document.getElementById("generated-password").textContent.trim();
@@ -45,7 +45,7 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 });
 
-// PASSWORD MANAGER BELOW
+// ----- PASSWORD MANAGER BELOW -----
 
 function toggleVisibility(index) {
     var passwordElement = document.querySelectorAll(".user-password")[index];
@@ -65,7 +65,7 @@ function toggleVisibility(index) {
     }
 }
 
-// Initialize Show/Hide button text on load
+// ----- Initialize Show/Hide button text on load -----
 document.addEventListener("DOMContentLoaded", function() {
     var buttons = document.querySelectorAll(".toggle-visibility");
     buttons.forEach(function(button, index) {
@@ -73,10 +73,8 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 });
 
-// Delete button functionality
+// ---- Delete button functionality ----
 function setDeleteValues(website) {
-    
-    // Select the span with data-password-id attribute
     const passwordIdSpan = document.querySelector(`button[data-website="${website}"] + span[data-password-id]`);
     
     if (passwordIdSpan) {
@@ -85,7 +83,33 @@ function setDeleteValues(website) {
         document.querySelector("#delete-website").value = website;
         document.querySelector("#delete-password-id").value = passwordId;
 
-        // Submit the delete form
         document.getElementById("delete-password-form").submit();
     }
 }
+
+// ----- Edit form functionality -----
+function openEditModal(website, username, password, passwordId) {
+    document.getElementById('editWebsite').value = website;
+    document.getElementById('editUsername').value = username;
+    document.getElementById('editPassword').value = password;
+    document.getElementById('passwordId').value = passwordId;
+
+    document.getElementById('editModal').style.display = 'block';
+}
+
+// ----- Close edit form -----
+function closeEditModal() {
+    document.getElementById('editModal').style.display = 'none';
+}
+
+// ----- Submit edit form -----
+// function submitEditForm() {
+//     const editedWebsite = document.getElementById('editWebsite').value;
+//     const editedUsername = document.getElementById('editUsername').value;
+//     const editedPassword = document.getElementById('editPassword').value;
+//     const passwordId = document.querySelector(`#passwordId`).value;
+    
+//     document.getElementById('editForm').submit();
+
+//     closeEditModal();
+// }
