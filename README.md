@@ -25,5 +25,10 @@ CastlePass stores all your passwords in one place, securely. It can generate cus
 - Bootstrap
 - Werkzeug Security
 
+# Password Generator Video
+
+https://github.com/lastcastleofbowser/castlepass/assets/123087687/9f722f93-6fb0-4619-8e50-79737d0371ff
+
+
 # Authors
 Christian Willcox
