@@ -3,7 +3,7 @@
 <i>A Fortress for your Passwords</i>
 
 
-Password generator and manager. My final project submission for Harvard's CS50x Course
+Password generator and manager. My final project submission for Harvard's CS50x Course.
 
 Video Demo: https://youtu.be/dSM5KiwHoxQ
 
