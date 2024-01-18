@@ -267,7 +267,7 @@ def login():
 
         # Redirect user to password generator page
         flash(f"Logged in as: {rows[0][1]} {rows[0][2]}")
-        return redirect("/pass_generator")
+        return redirect("/pass_manager")
 
     # User reached route via GET (as by clicking a link or via redirect)
     else:
@@ -485,6 +485,5 @@ def edit_password():
     return redirect("/pass_manager")
 
 
-#  ----- DELETE ME BEFORE DEPLOYMENT -----
-# if __name__ == "__main__":
-#     app.run(debug=True)
+if __name__ == "__main__":
+    app.run(debug=True)
