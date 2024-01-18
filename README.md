@@ -30,6 +30,21 @@ CastlePass stores all your passwords in one place, securely. It can generate cus
 - Bootstrap
 - Werkzeug Security
 
+# Code & Organisation
+
+The Castlepass website is divided into two main sections: password management and password generation. Logic for the password generation is within a separate password_gen.py file and is called upon within the main app.py file.
+
+app.py contains the functions responsible for the login and registration. It also handles the information taken from the add, edit and delete forms sent from the password manager when submitted. It communicates with the SQL database to either insert, delete or update values.
+
+Backend information is stored within a SQLite database called castlepass.db. The tables used are a users table to handle registration and login; a passwords table to store users' passwords; and a generator table that stores all generated passwords so that they can be displayed in each user's generated passwords table.
+
+# Folders
+1. Templates - this folder contains the HTML pages that are visible to the user, including flask's master layout called layout.html, from which all other HTML files take their layout.
+
+2. Static - inside this folder are my CSS and JS files alongside  any images used for this project.
+
+
+
 # Password Generator Video
 
 https://github.com/lastcastleofbowser/castlepass/assets/123087687/9f722f93-6fb0-4619-8e50-79737d0371ff
