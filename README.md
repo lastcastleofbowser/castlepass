@@ -10,12 +10,11 @@ With today's society spending more time online, it is important to protect ourse
 
 To help solve this problem I decided to create CastlePass, a fortress for your passwords!
 
-CastlePass stores all your passwords in one place, securely. It can generate customised passwords and allows users to view, search and edit their passwords all in one place. Generated passwords must be a minimum of 6 characters and can include lowercase and uppercase letters, numbers and special characters.
+CastlePass stores all your passwords in one place, securely. It can generate customised passwords and allows users to view, edit and delete their passwords all in one place. Generated passwords must be a minimum of 6 characters and can include lowercase and uppercase letters, numbers and special characters.
 
 # Features
 - User registration and log in
 - Add, edit and delete passwords
-- Search all your passwords
 - Customise generated passwords by length, letter case, numbers and special characters
 - Toggle password visibility for security
 - Quick password-to-clipboard copy
