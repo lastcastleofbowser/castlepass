@@ -192,35 +192,6 @@ def register():
 
 
 
-# @app.route('/login', methods=['GET', 'POST'])
-# def login():  
-    form = LoginForm()
-    email = request.form.get("email")
-    password = request.form.get("password")
-
-    if request.method == "POST" and form.validate_on_submit():
-        print(f"Form data: {request.form}")
-        
-        user = User.get(email)
-
-        if user and user.check_password(password):
-            login_user(user)
-            flash(f'Logged in as: {user.first_name} {user.last_name}')
-            print(f"Current user authenticated: {current_user.is_authenticated}")
-            print(f"Current user ID: {current_user.id}")
-            print(f"Current user first name: {current_user.first_name}")
-
-            next_page = request.args.get('next')
-            print(f"Next Page: {next_page}")
-            if not next_page or next_page == 'None' or not next_page.startswith('/'):
-                next_page = '/passwords'
-            print(f"Redirecting to: {next_page}")
-            return redirect(next_page)
-
-        flash('Invalid email or password.')
-    
-    return render_template('login.html', form=form)
-
 @app.route("/login", methods=["GET", "POST"])
 def login():
     """Log user in"""
@@ -269,7 +240,6 @@ def login():
         flash(f"Logged in as: {rows[0][1]} {rows[0][2]}")
         return redirect("/pass_manager")
 
-    # User reached route via GET (as by clicking a link or via redirect)
     else:
         return render_template("login.html")
     
