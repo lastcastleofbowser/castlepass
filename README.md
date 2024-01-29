@@ -43,12 +43,19 @@ Backend information is stored within a SQLite database called castlepass.db. The
 
 2. Static - inside this folder are my CSS and JS files alongside  any images used for this project.
 
+# Password Manager Video
+
+https://github.com/lastcastleofbowser/castlepass/assets/123087687/c35e8cc2-7508-4f27-8f2e-012b58f2f394
 
 
 # Password Generator Video
 
 https://github.com/lastcastleofbowser/castlepass/assets/123087687/9f722f93-6fb0-4619-8e50-79737d0371ff
 
+# How to run
+1. Clone the repo 
+2. Run the app - 'flask run'
 
+   
 # Authors
 Christian Willcox
